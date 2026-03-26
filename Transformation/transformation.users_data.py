@@ -71,15 +71,41 @@ df["total_debt"] = df["total_debt"].apply(parse_currency)
 # column 13 credit_score
 # column 14 num_credit_cards
 # column 15 employment_status
+df["employment_status"] = df["employment_status"].str.lstrip() # remove emtpy spaces at start and end of eduction levels
 # column 16 education_level
-df["education_level"] = df["education_level"].str.lstrip() # remove emtpy spaces at start and end of eduction levels
-df["education_level"] = df["education_level"].str.replace('BACHELOR DEGREE', 'Bachelor') # remove MCC
-df["education_level"] = df["education_level"].str.replace('DOCTORATE', 'Doctorate') 
-df["education_level"] = df["education_level"].str.replace('associate degree', 'Associate') 
-df["education_level"] = df["education_level"].str.replace('ASSOCIATE DEGREE', 'Associate') 
-df["education_level"] = df["education_level"].str.replace('high school', 'High School') 
+df["education_level"] = df["education_level"].str.strip().str.replace(r"\s+", " ", regex=True) # remove extra spaces
 
+df["education_level"] = df["education_level"].replace("high school", "High School")
+df["education_level"] = df["education_level"].replace("highschool", "High School")
+df["education_level"] = df["education_level"].replace("Highschool", "High School")
+df["education_level"] = df["education_level"].replace("HIGH SCHOOL", "High School")
+df["education_level"] = df["education_level"].replace("HS", "High School")
 
+df["education_level"] = df["education_level"].replace("associate degree", "Associate Degree")
+df["education_level"] = df["education_level"].replace("Associate Degree Degree", "Associate Degree")
+df["education_level"] = df["education_level"].replace("Associate Degree Deg", "Associate Degree")
+df["education_level"] = df["education_level"].replace("Associate", "Associate Degree")
+df["education_level"] = df["education_level"].replace("ASSOCIATE DEGREE", "Associate Degree")
+df["education_level"] = df["education_level"].replace("Assoc Degree", "Associate Degree")
+df["education_level"] = df["education_level"].replace("Associate deg.", "Associate Degree")
+
+df["education_level"] = df["education_level"].replace("BACHELOR DEGREE", "Bachelor Degree")
+df["education_level"] = df["education_level"].replace("Bachelor Degrees", "Bachelor Degree")
+df["education_level"] = df["education_level"].replace("Bachelor", "Bachelor Degree")
+df["education_level"] = df["education_level"].replace("Bachelor's Degree", "Bachelor Degree")
+df["education_level"] = df["education_level"].replace("BA/BS", "Bachelor Degree")
+df["education_level"] = df["education_level"].replace("Bachelors", "Bachelor Degree")
+
+df["education_level"] = df["education_level"].replace("Masters", "Masters Degree")
+df["education_level"] = df["education_level"].replace("masters degree", "Masters Degree")
+df["education_level"] = df["education_level"].replace("master degree", "Masters Degree")
+df["education_level"] = df["education_level"].replace("Master Degree", "Masters Degree")
+df["education_level"] = df["education_level"].replace("MASTER DEGREE", "Masters Degree")
+df["education_level"] = df["education_level"].replace("Masters Degree Degree", "Masters Degree")
+df["education_level"] = df["education_level"].replace("MS/MA", "Masters Degree")
+df["education_level"] = df["education_level"].replace("Master's Degree", "Masters Degree")
+
+df["education_level"] = df["education_level"].replace("DOCTORATE", "Doctorate")
 
 # ---------------
 # load data
