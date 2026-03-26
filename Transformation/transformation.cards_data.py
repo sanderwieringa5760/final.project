@@ -31,11 +31,14 @@ df = pd.read_sql_query(sql="SELECT * FROM ingestion.cards_data", con=conn)
 # ---------------
 
 # df = df.where(df.notna(), other=None)
+# column 1 id clean
+# column 2 client_id clean
+# column 3 card_brand ---------------------------------------------------------------------
 df["card_brand"] = df["card_brand"].fillna("N/A")
 df["card_brand"] = df["card_brand"].str.replace(" ", "", regex=False) # remove all spaces
 df["card_brand"] = df["card_brand"].replace("unknown", "N/A")
 df["card_brand"] = df["card_brand"].replace("-", "")
-
+# column 4 card_brand ---------------------------------------------------------------------
 df["card_brand"] = df["card_brand"].replace("MASTERCARD", "Mastercard")
 df["card_brand"] = df["card_brand"].replace("MasterCard", "Mastercard")
 
@@ -51,7 +54,7 @@ df["card_brand"] = df["card_brand"].replace("Vis", "Visa")
 df["card_brand"] = df["card_brand"].replace("Amex", "American Express")
 df["card_brand"] = df["card_brand"].replace("amex", "American Express") 
 df["card_brand"] = df["card_brand"].replace("AMEX", "American Express") 
-
+# column 5 card_type ---------------------------------------------------------------------
 df["card_type"] = df["card_type"].fillna("N/A")
 df["card_type"] = df["card_type"].str.replace(" ", "", regex=False) # remove all spaces
 df["card_type"] = df["card_type"].replace("unknown", "N/A")
@@ -65,6 +68,7 @@ df["card_type"] = df["card_type"].replace("Debiit", "Debit")
 df["card_type"] = df["card_type"].replace("BankDebit", "Debit")
 df["card_type"] = df["card_type"].replace("Debti", "Debit") 
 df["card_type"] = df["card_type"].replace("DebitCard", "Debit")
+
 df["card_type"] = df["card_type"].replace("Debit(Prepayed)", "Debit (Prepaid)")
 df["card_type"] = df["card_type"].replace("Debit(Prepaid)Card", "Debit (Prepaid)")
 df["card_type"] = df["card_type"].replace("Debit(Prepaid)", "Debit (Prepaid)")
@@ -79,14 +83,11 @@ df["card_type"] = df["card_type"].replace("DebitPrepaid", "Debit (Prepaid)")
 df["card_type"] = df["card_type"].replace("Debit(Prepiad)", "Debit (Prepaid)")
 df["card_type"] = df["card_type"].replace("DeBiT(PrePaid)", "Debit (Prepaid)")
 df["card_type"] = df["card_type"].replace("Debit(Prepiad)", "Debit (Prepaid)")
-
 df["card_type"] = df["card_type"].replace("DP", "Debit (Prepaid)")
 df["card_type"] = df["card_type"].replace("DPP", "Debit (Prepaid)")
 df["card_type"] = df["card_type"].replace("PPD", "Debit (Prepaid)")
 df["card_type"] = df["card_type"].replace("DB-PP", "Debit (Prepaid)")
 df["card_type"] = df["card_type"].replace("Prepaid", "Debit (Prepaid)")
-
-
 
 df["card_type"] = df["card_type"].replace("CC", "Credit") 
 df["card_type"] = df["card_type"].replace("CR", "Credit") 
@@ -97,28 +98,61 @@ df["card_type"] = df["card_type"].replace("Crdeit", "Credit")
 df["card_type"] = df["card_type"].replace("Card-Credit", "Credit")
 df["card_type"] = df["card_type"].replace("CreditCard", "Credit") 
 df["card_type"] = df["card_type"].replace("CRED", "Credit") 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-df["card_type"] = df["card_type"].fillna("N/A")
-
+# column 6 card_number ---------------------------------------------------------------------
 df = df.drop_duplicates(subset=['card_number'], keep='last')
+# column 7 expires ---------------------------------------------------------------------
+df["expires"] = pd.to_datetime(df["expires"] + "-2026", format="%b-%d-%Y", errors="coerce").dt.strftime("%m-%d-%Y")
+df["expires"] = df["expires"].fillna("N/A")
+# column 8 cvv clean
+# column 9 has_chip
+df["has_chip"] = df["has_chip"].replace("YES", "Yes") 
+df["has_chip"] = df["has_chip"].replace("NO", "No") 
+# column 10 num_cards_issued clean
+# column 11 credit_limit ---------------------------------------------------------------------
 df["credit_limit"] = df["credit_limit"].fillna(0.0) # missing becomes 0
-df["issuer_bank_name"] = df["issuer_bank_name"].str.lstrip() # remove emtpy spaces at start of bank names
+df["credit_limit"] = df["credit_limit"].replace("9999999", "N/A") # replace nonsensical values with N/A
+df["credit_limit"] = df["credit_limit"].replace("error_value", "N/A") # replace error with N/A
+                        # flipping negative values to positive below the parse function VVV
+# column 12 acct_open_date
+df["acct_open_date"] = pd.to_datetime(df["acct_open_date"] + "-2026", format="%b-%d-%Y", errors="coerce").dt.strftime("%m-%d-%Y")
+df["acct_open_date"] = df["acct_open_date"].fillna("N/A")
+# column 13 year_pin_last_changed clean
+# column 14 card_on_dark_web clean
+# column 15 issuer_bank_name ---------------------------------------------------------------------
+df["issuer_bank_name"] = df["issuer_bank_name"].str.strip() # remove emtpy spaces at start of bank names
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("citi", "Citi Bank")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("Citi", "Citi Bank")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("CITI", "Citi Bank")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("Chase Bk", "JPMorgan Chase")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("U.S. Bk", "U.S. Bank")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("Bk of America", "Bank of America")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("PNC Bk", "PNC Bank")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("JP Morgan Chase", "JPMorgan Chase")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("Ally Bk", "Ally Bank")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("Discover Bk", "Discover Bank")
+# column 16 issuer_bank_state ---------------------------------------------------------------------
+df["issuer_bank_state"] = df["issuer_bank_state"].replace("Illinois", "IL")
+df["issuer_bank_state"] = df["issuer_bank_state"].replace("California", "CA")
+df["issuer_bank_state"] = df["issuer_bank_state"].replace("Texas", "TX")
+df["issuer_bank_state"] = df["issuer_bank_state"].replace("Minnesota", "MN")
+df["issuer_bank_state"] = df["issuer_bank_state"].replace("New York", "NY")
+df["issuer_bank_state"] = df["issuer_bank_state"].replace("Virginia", "VA")
+df["issuer_bank_state"] = df["issuer_bank_state"].replace("North Carolina", "NC")
+df["issuer_bank_state"] = df["issuer_bank_state"].replace("Pennsylvania", "PA")
+df["issuer_bank_state"] = df["issuer_bank_state"].replace("Michigan", "MI")
+# column 17 issuer_bank_type ---------------------------------------------------------------------
+df["issuer_bank_type"] = df["issuer_bank_type"].replace("online", "Online")
+df["issuer_bank_type"] = df["issuer_bank_type"].replace("Online Only", "Online")
+df["issuer_bank_type"] = df["issuer_bank_type"].replace("Online Bank", "Online")
+df["issuer_bank_type"] = df["issuer_bank_type"].replace("regional", "Regional")
+df["issuer_bank_type"] = df["issuer_bank_type"].replace("Regional Bank", "Regional")
+df["issuer_bank_type"] = df["issuer_bank_type"].replace("national", "National")
+df["issuer_bank_type"] = df["issuer_bank_type"].replace("National Bank", "National")
+# column 18 issuer_risk_rating ---------------------------------------------------------------------
+df["issuer_risk_rating"] = df["issuer_risk_rating"].replace("Low Risk", "Low")
+df["issuer_risk_rating"] = df["issuer_risk_rating"].replace("Med", "Medium")
 
+# helper function to deal with credit_limit formatting issues
 def parse_credit_limit(val):
     if val is None or (isinstance(val, float) and pd.isna(val)):
         return 0.0
@@ -143,6 +177,7 @@ def parse_credit_limit(val):
         return 0.0
 
 df["credit_limit"] = df["credit_limit"].apply(parse_credit_limit)
+df["credit_limit"] = df["credit_limit"].abs() # flip negative values to positive
 
 # ---------------
 # load data
