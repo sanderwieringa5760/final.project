@@ -11,6 +11,10 @@ conn = pyodbc.connect(
 conn.autocommit = True
 cursor = conn.cursor()
 
+# ------------------
+# make tables
+# ------------------
+
 # Define tables and their CSV file paths
 tables = [
     {
@@ -35,6 +39,9 @@ tables = [
     }
 ]
 
+# ------------------
+# Load data into tables
+# ------------------
 for t in tables:
     table_name = t["table"]
     file_path = t["file"]
@@ -50,12 +57,20 @@ for t in tables:
         rows = 0
         batch_rows = []
         batch_size = 1000 if table_name == "ingestion.transactions_data" else 1
-        
+
+# If doesn't work delete from here
         for row in reader:
-            # Only convert empty strings to None, keep everything else as-is
             row = [None if val == "" else val for val in row]
+
+            # Fix card_number precision corruption (only for cards_data)
+            if table_name == "ingestion.cards_data":
+                card_number_index = header.index("card_number")
+                if row[card_number_index] is not None and "." in row[card_number_index]:
+                    row[card_number_index] = row[card_number_index].split(".")[0]
+
             batch_rows.append(row)
-            
+# if doesn't work delete until here
+
             # Execute batch or single row
             if len(batch_rows) >= batch_size:
                 cursor.executemany(f"INSERT INTO {table_name} VALUES ({placeholders})", batch_rows)
