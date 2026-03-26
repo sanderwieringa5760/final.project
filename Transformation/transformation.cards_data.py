@@ -101,7 +101,7 @@ df["card_type"] = df["card_type"].replace("CRED", "Credit")
 # column 6 card_number ---------------------------------------------------------------------
 df = df.drop_duplicates(subset=['card_number'], keep='last')
 # column 7 expires ---------------------------------------------------------------------
-df["expires"] = pd.to_datetime(df["expires"] + "-2026", format="%b-%d-%Y", errors="coerce").dt.strftime("%m-%d-%Y")
+df["expires"] = pd.to_datetime(df["expires"], format="%b-%y", errors="coerce").dt.strftime("%m-%Y")
 df["expires"] = df["expires"].fillna("N/A")
 # column 8 cvv clean
 # column 9 has_chip
