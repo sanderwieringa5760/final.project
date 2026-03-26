@@ -32,8 +32,92 @@ df = pd.read_sql_query(sql="SELECT * FROM ingestion.cards_data", con=conn)
 
 # df = df.where(df.notna(), other=None)
 df["card_brand"] = df["card_brand"].fillna("N/A")
+df["card_brand"] = df["card_brand"].str.replace(" ", "", regex=False) # remove all spaces
+df["card_brand"] = df["card_brand"].replace("unknown", "N/A")
+df["card_brand"] = df["card_brand"].replace("-", "")
+
+df["card_brand"] = df["card_brand"].replace("MASTERCARD", "Mastercard")
+df["card_brand"] = df["card_brand"].replace("MasterCard", "Mastercard")
+
+df["card_brand"] = df["card_brand"].replace("VISA", "Visa")
+df["card_brand"] = df["card_brand"].replace("V", "Visa")
+df["card_brand"] = df["card_brand"].replace("Vissa", "Visa")
+df["card_brand"] = df["card_brand"].replace("VVisa", "Visa")
+df["card_brand"] = df["card_brand"].replace("visa-card", "Visa")
+df["card_brand"] = df["card_brand"].replace("V!sa", "Visa")
+df["card_brand"] = df["card_brand"].replace("vis", "Visa")
+df["card_brand"] = df["card_brand"].replace("Vis", "Visa")
+
+df["card_brand"] = df["card_brand"].replace("Amex", "American Express")
+df["card_brand"] = df["card_brand"].replace("amex", "American Express") 
+df["card_brand"] = df["card_brand"].replace("AMEX", "American Express") 
+
 df["card_type"] = df["card_type"].fillna("N/A")
-df["credit_limit"] = df["credit_limit"].fillna(0.0)
+df["card_type"] = df["card_type"].str.replace(" ", "", regex=False) # remove all spaces
+df["card_type"] = df["card_type"].replace("unknown", "N/A")
+df["card_type"] = df["card_type"].replace("-", "")
+
+df["card_type"] = df["card_type"].replace("DB", "Debit") 
+df["card_type"] = df["card_type"].replace("DEB", "Debit") 
+df["card_type"] = df["card_type"].replace("D", "Debit")
+df["card_type"] = df["card_type"].replace("Deibt", "Debit")
+df["card_type"] = df["card_type"].replace("Debiit", "Debit") 
+df["card_type"] = df["card_type"].replace("BankDebit", "Debit")
+df["card_type"] = df["card_type"].replace("Debti", "Debit") 
+df["card_type"] = df["card_type"].replace("DebitCard", "Debit")
+df["card_type"] = df["card_type"].replace("Debit(Prepayed)", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("Debit(Prepaid)Card", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("Debit(Prepaid)", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("Debti(Prepaid)", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("Debti(Prepiad)", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("PrepaidDebit", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("debit(prepaid)", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("DEBIT(PREPAID)", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("DeBiT(PrePaid))", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("Debit(PREPAID)", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("DebitPrepaid", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("Debit(Prepiad)", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("DeBiT(PrePaid)", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("Debit(Prepiad)", "Debit (Prepaid)")
+
+df["card_type"] = df["card_type"].replace("DP", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("DPP", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("PPD", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("DB-PP", "Debit (Prepaid)")
+df["card_type"] = df["card_type"].replace("Prepaid", "Debit (Prepaid)")
+
+
+
+df["card_type"] = df["card_type"].replace("CC", "Credit") 
+df["card_type"] = df["card_type"].replace("CR", "Credit") 
+df["card_type"] = df["card_type"].replace("cedit", "Credit")
+df["card_type"] = df["card_type"].replace("Cedit", "Credit")
+df["card_type"] = df["card_type"].replace("Credt", "Credit")
+df["card_type"] = df["card_type"].replace("Crdeit", "Credit")
+df["card_type"] = df["card_type"].replace("Card-Credit", "Credit")
+df["card_type"] = df["card_type"].replace("CreditCard", "Credit") 
+df["card_type"] = df["card_type"].replace("CRED", "Credit") 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+df["card_type"] = df["card_type"].fillna("N/A")
+
+df = df.drop_duplicates(subset=['card_number'], keep='last')
+df["credit_limit"] = df["credit_limit"].fillna(0.0) # missing becomes 0
+df["issuer_bank_name"] = df["issuer_bank_name"].str.lstrip() # remove emtpy spaces at start of bank names
 
 def parse_credit_limit(val):
     if val is None or (isinstance(val, float) and pd.isna(val)):
