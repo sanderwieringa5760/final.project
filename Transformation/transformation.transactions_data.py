@@ -36,6 +36,14 @@ df = pd.read_sql_query(sql="SELECT * FROM ingestion.transactions_data", con=conn
 # column 3 client_id
 # column 4 card_id
 # column 5 amount
+def parse_amount(val):
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return 0.0
+    val = str(val).strip().replace("$", "").replace(",", "")
+    try:
+        return float(val)
+    except ValueError:
+        return 0.0
 # column 6 use_chip
 # column 7 merchant_id
 # column 8 merchant_city
@@ -73,7 +81,7 @@ df = df[["id", "date", "client_id", "card_id", "amount", "use_chip", "merchant_i
 # Cast numeric columns (ingestion stores everything as strings)
 for col in ["id", "client_id", "card_id", "merchant_id", "mcc"]:
     df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
-df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
+df["amount"] = df["amount"].apply(parse_amount)
 
 # Insert cleaned data into transformation layer
 placeholders = ",".join(["?" for _ in range(len(df.columns))])
