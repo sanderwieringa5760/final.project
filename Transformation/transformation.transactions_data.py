@@ -48,9 +48,12 @@ def parse_amount(val):
 # column 7 merchant_id
 # column 8 merchant_city
 # column 9 merchant_state
+df["merchant_state"] = df["merchant_state"].fillna("N/A")
 # column 10 zip
+df["zip"] = df["zip"].fillna("N/A")
 # column 11 mcc 
 # column 12 errors
+df["errors"] = df["errors"].fillna("N/A")
 
 # ---------------
 # load data
