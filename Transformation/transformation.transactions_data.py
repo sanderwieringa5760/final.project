@@ -30,6 +30,20 @@ df = pd.read_sql_query("SELECT * FROM ingestion.transactions_data", conn)
 # clean data
 # ---------------
 
+# remove fully duplicate rows (all columns must match)
+before = len(df)
+df = df.drop_duplicates()
+removed = before - len(df)
+if removed > 0:
+    print(f"Removed {removed} duplicate row(s). {len(df)} rows remaining.")
+else:
+    print("No duplicate rows found.")
+
+# column 1 id
+# column 2 date
+# column 3 client_id
+# column 4 card_id
+# column 5 amount
 # Vectorized amount parsing (replaces slow row-by-row .apply())
 df["amount"] = (
     df["amount"]
@@ -39,9 +53,15 @@ df["amount"] = (
     .str.replace(",", "", regex=False)
 )
 df["amount"] = pd.to_numeric(df["amount"], errors="coerce").fillna(0.0)
-
+# colums 6 use_chip
+# column 7 merchant_id
+# column 8 merchant_city
+# column 9 merchant_state
 df["merchant_state"] = df["merchant_state"].fillna("N/A")
+# column 10 zip
 df["zip"] = df["zip"].fillna("N/A")
+# column 11 mcc
+# column 12 errors
 df["errors"] = df["errors"].fillna("N/A")
 
 # ---------------
@@ -53,11 +73,11 @@ cursor.execute("DROP TABLE IF EXISTS transformation.transactions_data")
 cursor.execute("""
     CREATE TABLE transformation.transactions_data (
     id              INT,
-    date            VARCHAR(50),
+    date            VARCHAR(20),
     client_id       INT,
     card_id         INT,
     amount          DECIMAL(18,2),
-    use_chip        VARCHAR(50),
+    use_chip        VARCHAR(30),
     merchant_id     INT,
     merchant_city   VARCHAR(100),
     merchant_state  VARCHAR(50),
@@ -66,7 +86,7 @@ cursor.execute("""
     errors          VARCHAR(255)
     )
 """)
-
+  
 # Keep only the columns matching the target table
 df = df[["id", "date", "client_id", "card_id", "amount", "use_chip", "merchant_id", "merchant_city", "merchant_state", "zip", "mcc", "errors"]]
 

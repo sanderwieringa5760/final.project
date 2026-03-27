@@ -30,15 +30,23 @@ df = pd.read_sql_query(sql="SELECT * FROM ingestion.mcc_data", con=conn)
 # clean data
 # ---------------
 
-# df = df.where(df.notna(), other=None)
-# df["card_brand"] = df["card_brand"].fillna("N/A")
-# df["card_type"] = df["card_type"].fillna("N/A")
-# df["credit_limit"] = df["credit_limit"].fillna(0.0)
+# remove fully duplicate rows (all columns must match)
+before = len(df)
+df = df.drop_duplicates()
+removed = before - len(df)
+if removed > 0:
+    print(f"Removed {removed} duplicate row(s). {len(df)} rows remaining.")
+else:
+    print("No duplicate rows found.")
+# column 1 code    
 df["code"] = df["code"].str.replace('"', '') # make normal numbers, remove "
 df["code"] = df["code"].str.replace('MCC', '') # remove MCC
 df = df.iloc[:-2] # remove final rows of comments
+# column 2 description
 df["description"] = df["description"].str.lstrip()
+# column 3 notes
 df["notes"] = df["notes"].fillna("N/A")
+# column 4 updated_by
 df["updated_by"] = df["updated_by"].fillna("N/A")
 
 
@@ -53,8 +61,8 @@ cursor.execute("DROP TABLE IF EXISTS transformation.mcc_data")
 cursor.execute("""
     CREATE TABLE transformation.mcc_data (
     code        VARCHAR(50),
-    description VARCHAR(255),
-    notes       VARCHAR(500),
+    description VARCHAR(500),
+    notes       VARCHAR(255),
     updated_by  VARCHAR(100)    )   
 """)
 

@@ -30,6 +30,15 @@ df = pd.read_sql_query(sql="SELECT * FROM ingestion.users_data", con=conn)
 # clean data
 # ---------------
 
+# remove fully duplicate rows (all columns must match)
+before = len(df)
+df = df.drop_duplicates()
+removed = before - len(df)
+if removed > 0:
+    print(f"Removed {removed} duplicate row(s). {len(df)} rows remaining.")
+else:
+    print("No duplicate rows found.")
+
 # column 1  id
 # column 2  current_age
 today = pd.Timestamp.today()
@@ -46,6 +55,7 @@ df["current_age"] = df.apply(
 # column 5  birth_month
 # column 6  gender
 # column 7  address
+df["address"] = df["address"].str.strip().str.replace(r"\s+", " ", regex=True).str.title()
 # column 8  latitude
 # column 9  longitude
 # column 10 per_capita_income
@@ -81,10 +91,20 @@ df["total_debt"] = df["total_debt"].apply(parse_currency)
 # column 14 num_credit_cards
 # column 15 employment_status
 df["employment_status"] = df["employment_status"].str.lstrip() # remove emtpy spaces at start and end of eduction levels
+df["employment_status"] = df["employment_status"].replace("Studnt", "Retired")
 df["employment_status"] = df["employment_status"].replace("student", "Student")
+df["employment_status"] = df["employment_status"].replace("Un-employed", "Retired")
+df["employment_status"] = df["employment_status"].replace("Unemployd", "Retired")
 df["employment_status"] = df["employment_status"].replace("unemployed", "Unemployed")
+df["employment_status"] = df["employment_status"].replace("Empl0yed", "Retired")
 df["employment_status"] = df["employment_status"].replace("employed", "Employed")
 df["employment_status"] = df["employment_status"].replace("SELF-EMPLOYED", "Self-Employed")
+df["employment_status"] = df["employment_status"].replace("SELF EMPLOYED", "Retired")
+df["employment_status"] = df["employment_status"].replace("Self-Employd", "Retired")
+df["employment_status"] = df["employment_status"].replace("Self Employed", "Retired")
+df["employment_status"] = df["employment_status"].replace("Retird", "Retired")
+df["employment_status"] = df["employment_status"].replace("Ret.", "Retired")
+
 # column 16 education_level
 df["education_level"] = df["education_level"].str.strip().str.replace(r"\s+", " ", regex=True) # remove extra spaces
 

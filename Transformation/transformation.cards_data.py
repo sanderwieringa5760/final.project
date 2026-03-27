@@ -30,14 +30,23 @@ df = pd.read_sql_query(sql="SELECT * FROM ingestion.cards_data", con=conn)
 # clean data
 # ---------------
 
-# df = df.where(df.notna(), other=None)
+# remove fully duplicate rows (all columns must match)
+before = len(df)
+df = df.drop_duplicates()
+removed = before - len(df)
+if removed > 0:
+    print(f"Removed {removed} duplicate row(s). {len(df)} rows remaining.")
+else:
+    print("No duplicate rows found.")
+
 # column 1 id clean
 # column 2 client_id clean
 # column 3 card_brand ---------------------------------------------------------------------
 df["card_brand"] = df["card_brand"].fillna("N/A")
 df["card_brand"] = df["card_brand"].str.replace(" ", "", regex=False) # remove all spaces
+df["card_brand"] = df["card_brand"].replace("", "N/A")
 df["card_brand"] = df["card_brand"].replace("unknown", "N/A")
-df["card_brand"] = df["card_brand"].replace("-", "")
+df["card_brand"] = df["card_brand"].replace("-", "N/A")
 # column 4 card_brand ---------------------------------------------------------------------
 df["card_brand"] = df["card_brand"].replace("MASTERCARD", "Mastercard")
 df["card_brand"] = df["card_brand"].replace("MasterCard", "Mastercard")
@@ -57,8 +66,9 @@ df["card_brand"] = df["card_brand"].replace("AMEX", "American Express")
 # column 5 card_type ---------------------------------------------------------------------
 df["card_type"] = df["card_type"].fillna("N/A")
 df["card_type"] = df["card_type"].str.replace(" ", "", regex=False) # remove all spaces
+df["card_type"] = df["card_type"].replace("", "N/A")
 df["card_type"] = df["card_type"].replace("unknown", "N/A")
-df["card_type"] = df["card_type"].replace("-", "")
+df["card_type"] = df["card_type"].replace("-", "N/A")
 
 df["card_type"] = df["card_type"].replace("DB", "Debit") 
 df["card_type"] = df["card_type"].replace("DEB", "Debit") 
@@ -68,6 +78,9 @@ df["card_type"] = df["card_type"].replace("Debiit", "Debit")
 df["card_type"] = df["card_type"].replace("BankDebit", "Debit")
 df["card_type"] = df["card_type"].replace("Debti", "Debit") 
 df["card_type"] = df["card_type"].replace("DebitCard", "Debit")
+df["card_type"] = df["card_type"].replace("DEBIT", "Debit")
+df["card_type"] = df["card_type"].replace("debit", "Debit")
+df["card_type"] = df["card_type"].replace("DeBiT", "Debit")
 
 df["card_type"] = df["card_type"].replace("Debit(Prepayed)", "Debit (Prepaid)")
 df["card_type"] = df["card_type"].replace("Debit(Prepaid)Card", "Debit (Prepaid)")
@@ -92,8 +105,11 @@ df["card_type"] = df["card_type"].replace("Prepaid", "Debit (Prepaid)")
 df["card_type"] = df["card_type"].replace("CC", "Credit") 
 df["card_type"] = df["card_type"].replace("CR", "Credit") 
 df["card_type"] = df["card_type"].replace("cedit", "Credit")
-df["card_type"] = df["card_type"].replace("Cedit", "Credit")
+df["card_type"] = df["card_type"].replace("cedit", "Credit")
+df["card_type"] = df["card_type"].replace("credit", "Credit")
 df["card_type"] = df["card_type"].replace("Credt", "Credit")
+df["card_type"] = df["card_type"].replace("CrEdIt", "Credit") 
+df["card_type"] = df["card_type"].replace("CREDIT", "Credit") 
 df["card_type"] = df["card_type"].replace("Crdeit", "Credit")
 df["card_type"] = df["card_type"].replace("Card-Credit", "Credit")
 df["card_type"] = df["card_type"].replace("CreditCard", "Credit") 
