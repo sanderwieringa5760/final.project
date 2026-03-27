@@ -60,7 +60,7 @@ tables_sql = {
             year_pin_last_changed VARCHAR(10),
             card_on_dark_web VARCHAR(10),
             issuer_bank_name VARCHAR(100),
-            issuer_bank_state VARCHAR(10),
+            issuer_bank_state VARCHAR(50),
             issuer_bank_type VARCHAR(50),
             issuer_risk_rating VARCHAR(20)
         )
@@ -75,17 +75,17 @@ tables_sql = {
     """,
     "transactions_data": """
         CREATE TABLE ingestion.transactions_data (
-            id VARCHAR(50),
+            id INT,
             [date] VARCHAR(20),
-            client_id VARCHAR(50),
-            card_id VARCHAR(50),
+            client_id INT,
+            card_id INT,
             amount VARCHAR(25),
             use_chip VARCHAR(30),
-            merchant_id VARCHAR(50),
+            merchant_id INT,
             merchant_city VARCHAR(100),
-            merchant_state VARCHAR(10),
+            merchant_state VARCHAR(50),
             zip VARCHAR(10),
-            mcc VARCHAR(10),
+            mcc INT,
             errors VARCHAR(255)
         )
     """,

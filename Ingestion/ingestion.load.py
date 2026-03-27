@@ -1,89 +1,88 @@
-import pyodbc
+import os
 import csv
+import pyodbc
 
-# Connect to your SQL Server database
+# Connect to SQL Server database
 conn = pyodbc.connect(
     r"DRIVER={ODBC Driver 17 for SQL Server};"
     r"SERVER=.\SQLEXPRESS;"
     r"DATABASE=final_project;"
     r"Trusted_Connection=yes;"
 )
-conn.autocommit = True
+conn.autocommit = False
 cursor = conn.cursor()
 
-# ------------------
-# make tables
-# ------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+BATCH_SIZE = 300000
 
 # Define tables and their CSV file paths
 tables = [
     {
         "table": "ingestion.cards_data",
-        "file": "C:\\Users\\sjonn\\Documents\\UM\\data engineering\\final_project\\Dataset-final-project\\cards_data.csv",
-        "columns": 17
+        "file": os.path.join(BASE_DIR, "Dataset-final-project", "cards_data.csv"),
     },
     {
         "table": "ingestion.mcc_data",
-        "file": "C:\\Users\\sjonn\\Documents\\UM\\data engineering\\final_project\\Dataset-final-project\\mcc_data.csv",
-        "columns": 4
+        "file": os.path.join(BASE_DIR, "Dataset-final-project", "mcc_data.csv"),
     },
     {
         "table": "ingestion.transactions_data",
-        "file": "C:\\Users\\sjonn\\Documents\\UM\\data engineering\\final_project\\Dataset-final-project\\transactions_data.csv",
-        "columns": 12
+        "file": os.path.join(BASE_DIR, "Dataset-final-project", "transactions_data.csv"),
     },
     {
         "table": "ingestion.users_data",
-        "file": "C:\\Users\\sjonn\\Documents\\UM\\data engineering\\final_project\\Dataset-final-project\\users_data.csv",
-        "columns": 16
+        "file": os.path.join(BASE_DIR, "Dataset-final-project", "users_data.csv"),
     }
 ]
 
 # ------------------
 # Load data into tables
 # ------------------
-for t in tables:
-    table_name = t["table"]
-    file_path = t["file"]
-    placeholders = ",".join(["?" for _ in range(t["columns"])])
 
-    # Truncate table before loading
-    cursor.execute(f"TRUNCATE TABLE {table_name}")
+def count_rows(file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        return sum(1 for _ in f) - 1  # exclude header
 
-    # Read CSV and insert rows
+def load_table(table, file_path):
+    total_rows = count_rows(file_path)
+    print(f"\nLoading {os.path.basename(file_path)} into {table} ({total_rows} rows)...")
+
     with open(file_path, "r", encoding="utf-8") as f:
         reader = csv.reader(f)
-        header = next(reader)  # Skip header row
-        rows = 0
-        batch_rows = []
-        batch_size = 1000 if table_name == "ingestion.transactions_data" else 1
+        headers = next(reader)
 
-# If doesn't work delete from here
+        placeholders = ", ".join("?" * len(headers))
+        columns = ", ".join(f"[{col}]" for col in headers)
+        insert_sql = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+
+        batch = []
+        rows_loaded = 0
+
         for row in reader:
-            row = [None if val == "" else val for val in row]
+            batch.append(row)
 
-            # Fix card_number precision corruption (only for cards_data)
-            if table_name == "ingestion.cards_data":
-                card_number_index = header.index("card_number")
-                if row[card_number_index] is not None and "." in row[card_number_index]:
-                    row[card_number_index] = row[card_number_index].split(".")[0]
+            if len(batch) == BATCH_SIZE:
+                cursor.executemany(insert_sql, batch)
+                conn.commit()
+                rows_loaded += len(batch)
+                batch = []
+                pct = (rows_loaded / total_rows) * 100
+                print(f"  {rows_loaded}/{total_rows} rows ({pct:.1f}%)")
 
-            batch_rows.append(row)
-# if doesn't work delete until here
+        # Insert any remaining rows
+        if batch:
+            cursor.executemany(insert_sql, batch)
+            conn.commit()
+            rows_loaded += len(batch)
+            pct = (rows_loaded / total_rows) * 100
+            print(f"  {rows_loaded}/{total_rows} rows ({pct:.1f}%)")
 
-            # Execute batch or single row
-            if len(batch_rows) >= batch_size:
-                cursor.executemany(f"INSERT INTO {table_name} VALUES ({placeholders})", batch_rows)
-                rows += len(batch_rows)
-                batch_rows = []
-        
-        # Insert remaining rows
-        if batch_rows:
-            cursor.executemany(f"INSERT INTO {table_name} VALUES ({placeholders})", batch_rows)
-            rows += len(batch_rows)
+    print(f"  Done: {table}")
 
-    print(f"Loaded {rows} rows into {table_name}")
+for entry in tables:
+    load_table(entry["table"], entry["file"])
 
 cursor.close()
 conn.close()
-print("All tables loaded!")
+
