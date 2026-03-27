@@ -32,6 +32,15 @@ df = pd.read_sql_query(sql="SELECT * FROM ingestion.users_data", con=conn)
 
 # column 1  id
 # column 2  current_age
+today = pd.Timestamp.today()
+df["birth_year"] = pd.to_numeric(df["birth_year"], errors="coerce")
+df["birth_month"] = pd.to_numeric(df["birth_month"], errors="coerce")
+df["current_age"] = df.apply(
+    lambda row: today.year - row["birth_year"] - (1 if today.month < row["birth_month"] else 0)
+    if pd.notna(row["birth_year"]) and pd.notna(row["birth_month"]) else None,
+    axis=1
+)
+
 # column 3  retirement_age
 # column 4  birth_year
 # column 5  birth_month
@@ -122,11 +131,11 @@ cursor.execute("""
     birth_month         INT,
     gender              VARCHAR(50),
     address             VARCHAR(255),
-    latitude            DECIMAL(18,6),
-    longitude           DECIMAL(18,6),
-    per_capita_income   DECIMAL(18,2),
-    yearly_income       DECIMAL(18,2),
-    total_debt          DECIMAL(18,2),
+    latitude            DECIMAL(18,2),
+    longitude           DECIMAL(18,2),
+    per_capita_income   DECIMAL(18,0),
+    yearly_income       DECIMAL(18,0),
+    total_debt          DECIMAL(18,0),
     credit_score        INT,
     num_credit_cards    INT,
     employment_status   VARCHAR(100),
