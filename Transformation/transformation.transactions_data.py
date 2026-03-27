@@ -9,6 +9,7 @@ conn = pyodbc.connect(
 )
 conn.autocommit = True
 cursor = conn.cursor()
+cursor.fast_executemany = True  # critical for bulk insert speed
 
 # ---------------
 # get data
@@ -23,36 +24,24 @@ cursor.execute("""
 """)
 
 # Read from ingestion layer
-df = pd.read_sql_query(sql="SELECT * FROM ingestion.transactions_data", con=conn)
+df = pd.read_sql_query("SELECT * FROM ingestion.transactions_data", conn)
 
 # ---------------
 # clean data
 # ---------------
 
-# df = df.where(df.notna(), other=None)
-											
-# column 1 id
-# column 2 date
-# column 3 client_id
-# column 4 card_id
-# column 5 amount
-def parse_amount(val):
-    if val is None or (isinstance(val, float) and pd.isna(val)):
-        return 0.0
-    val = str(val).strip().replace("$", "").replace(",", "")
-    try:
-        return float(val)
-    except ValueError:
-        return 0.0
-# column 6 use_chip
-# column 7 merchant_id
-# column 8 merchant_city
-# column 9 merchant_state
+# Vectorized amount parsing (replaces slow row-by-row .apply())
+df["amount"] = (
+    df["amount"]
+    .astype(str)
+    .str.strip()
+    .str.replace("$", "", regex=False)
+    .str.replace(",", "", regex=False)
+)
+df["amount"] = pd.to_numeric(df["amount"], errors="coerce").fillna(0.0)
+
 df["merchant_state"] = df["merchant_state"].fillna("N/A")
-# column 10 zip
 df["zip"] = df["zip"].fillna("N/A")
-# column 11 mcc 
-# column 12 errors
 df["errors"] = df["errors"].fillna("N/A")
 
 # ---------------
@@ -83,27 +72,23 @@ df = df[["id", "date", "client_id", "card_id", "amount", "use_chip", "merchant_i
 
 # Cast numeric columns (ingestion stores everything as strings)
 for col in ["id", "client_id", "card_id", "merchant_id", "mcc"]:
-    df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
-df["amount"] = df["amount"].apply(parse_amount)
+    df[col] = pd.to_numeric(df[col], errors="coerce")
 
-# Insert cleaned data into transformation layer
-placeholders = ",".join(["?" for _ in range(len(df.columns))])
-total = len(df)
-batch_size = 10000
-last_pct = -1
+# Convert NaN → None in one vectorized pass (replaces slow row-by-row list comprehension)
+records = df.where(df.notna(), other=None).values.tolist()
+
+total = len(records)
+batch_size = 50000
+placeholders = ",".join(["?"] * len(df.columns))
+insert_sql = f"INSERT INTO transformation.transactions_data VALUES ({placeholders})"
+
 rows_inserted = 0
-
-import math
-records = [
-    [None if (v is None or (isinstance(v, float) and math.isnan(v))) else v for v in row]
-    for row in df.values.tolist()
-]
+last_pct = -1
 
 for i in range(0, total, batch_size):
     batch = records[i:i + batch_size]
-    cursor.executemany(f"INSERT INTO transformation.transactions_data VALUES ({placeholders})", batch)
+    cursor.executemany(insert_sql, batch)
     rows_inserted += len(batch)
-
     pct = int(rows_inserted / total * 100)
     if pct != last_pct:
         print(f"Progress: {pct}% ({rows_inserted}/{total})", flush=True)

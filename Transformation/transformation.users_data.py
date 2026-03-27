@@ -81,6 +81,10 @@ df["total_debt"] = df["total_debt"].apply(parse_currency)
 # column 14 num_credit_cards
 # column 15 employment_status
 df["employment_status"] = df["employment_status"].str.lstrip() # remove emtpy spaces at start and end of eduction levels
+df["employment_status"] = df["employment_status"].replace("student", "Student")
+df["employment_status"] = df["employment_status"].replace("unemployed", "Unemployed")
+df["employment_status"] = df["employment_status"].replace("employed", "Employed")
+df["employment_status"] = df["employment_status"].replace("SELF-EMPLOYED", "Self-Employed")
 # column 16 education_level
 df["education_level"] = df["education_level"].str.strip().str.replace(r"\s+", " ", regex=True) # remove extra spaces
 
