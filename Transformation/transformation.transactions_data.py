@@ -56,13 +56,14 @@ df["amount"] = pd.to_numeric(df["amount"], errors="coerce").fillna(0.0)
 # colums 6 use_chip
 # column 7 merchant_id
 # column 8 merchant_city
+df["merchant_city"] = df["merchant_city"].replace("ONLINE", "Online") 
 # column 9 merchant_state
-df["merchant_state"] = df["merchant_state"].fillna("N/A")
+df["merchant_state"] = df["merchant_state"].fillna("N/A").replace("", "N/A")
 # column 10 zip
-df["zip"] = df["zip"].fillna("N/A")
+df["zip"] = df["zip"].fillna("N/A").replace("", "N/A")
 # column 11 mcc
 # column 12 errors
-df["errors"] = df["errors"].fillna("N/A")
+df["errors"] = df["errors"].fillna("N/A").replace("", "N/A")
 
 # ---------------
 # load data
