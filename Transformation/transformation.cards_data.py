@@ -146,6 +146,10 @@ df["issuer_bank_name"] = df["issuer_bank_name"].replace("PNC Bk", "PNC Bank")
 df["issuer_bank_name"] = df["issuer_bank_name"].replace("JP Morgan Chase", "JPMorgan Chase")
 df["issuer_bank_name"] = df["issuer_bank_name"].replace("Ally Bk", "Ally Bank")
 df["issuer_bank_name"] = df["issuer_bank_name"].replace("Discover Bk", "Discover Bank")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("CHASE BANK", "JPMorgan Chase")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("bank of america", "Bank of America")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("ALLY BANK", "Ally Bank")
+df["issuer_bank_name"] = df["issuer_bank_name"].replace("u.s. bank", "U.S. Bank")
 # column 16 issuer_bank_state ---------------------------------------------------------------------
 df["issuer_bank_state"] = df["issuer_bank_state"].replace("Illinois", "IL")
 df["issuer_bank_state"] = df["issuer_bank_state"].replace("California", "CA")
@@ -162,11 +166,16 @@ df["issuer_bank_type"] = df["issuer_bank_type"].replace("Online Only", "Online")
 df["issuer_bank_type"] = df["issuer_bank_type"].replace("Online Bank", "Online")
 df["issuer_bank_type"] = df["issuer_bank_type"].replace("regional", "Regional")
 df["issuer_bank_type"] = df["issuer_bank_type"].replace("Regional Bank", "Regional")
+df["issuer_bank_type"] = df["issuer_bank_type"].replace("REGIONAL", "Regional")
 df["issuer_bank_type"] = df["issuer_bank_type"].replace("national", "National")
+df["issuer_bank_type"] = df["issuer_bank_type"].replace("NATIONAL", "National")
 df["issuer_bank_type"] = df["issuer_bank_type"].replace("National Bank", "National")
 # column 18 issuer_risk_rating ---------------------------------------------------------------------
 df["issuer_risk_rating"] = df["issuer_risk_rating"].replace("Low Risk", "Low")
+df["issuer_risk_rating"] = df["issuer_risk_rating"].replace("LOW", "Low")
+df["issuer_risk_rating"] = df["issuer_risk_rating"].replace("low", "Low")
 df["issuer_risk_rating"] = df["issuer_risk_rating"].replace("Med", "Medium")
+df["issuer_risk_rating"] = df["issuer_risk_rating"].replace("MEDIUM", "Medium")
 
 # helper function to deal with credit_limit formatting issues
 def parse_credit_limit(val):
