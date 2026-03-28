@@ -9,7 +9,7 @@ conn = pyodbc.connect(
 )
 conn.autocommit = True
 cursor = conn.cursor()
-cursor.fast_executemany = True  # critical for bulk insert speed
+cursor.fast_executemany = True
 
 # ---------------
 # get data
@@ -23,14 +23,18 @@ cursor.execute("""
     END
 """)
 
-# Read from ingestion layer
-df = pd.read_sql_query("SELECT * FROM ingestion.transactions_data", conn)
+# Select only needed columns upfront — avoids loading unused data
+df = pd.read_sql_query("""
+    SELECT id, [date], client_id, card_id, amount, use_chip,
+           merchant_id, merchant_city, merchant_state, zip, mcc, errors
+    FROM ingestion.transactions_data
+""", conn)
 
 # ---------------
 # clean data
 # ---------------
 
-# remove fully duplicate rows (all columns must match)
+# Remove duplicates first to reduce work on remaining transforms
 before = len(df)
 df = df.drop_duplicates()
 removed = before - len(df)
@@ -39,33 +43,49 @@ if removed > 0:
 else:
     print("No duplicate rows found.")
 
-# column 1 id
+# column 1 id / column 3 client_id / column 4 card_id / column 7 merchant_id / column 11 mcc
+for col in ["id", "client_id", "card_id", "merchant_id", "mcc"]:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
+df = df.dropna(subset=["id"])
+df["id"] = df["id"].astype(int)
+
 # column 2 date
-# column 3 client_id
-# column 4 card_id
+df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.strftime("%Y-%m-%d")
+
 # column 5 amount
-# Vectorized amount parsing (replaces slow row-by-row .apply())
 df["amount"] = (
     df["amount"]
-    .astype(str)
-    .str.strip()
+    .astype(str).str.strip()
     .str.replace("$", "", regex=False)
     .str.replace(",", "", regex=False)
 )
 df["amount"] = pd.to_numeric(df["amount"], errors="coerce").fillna(0.0)
-# colums 6 use_chip
-# column 7 merchant_id
-df["merchant_id"] = df["merchant_id"].astype(str).str.zfill(7)
+
+# column 6 use_chip
+use_chip_map = {
+    "Swipe Transaction": "In-Store",
+    "Online Transaction": "Online",
+    "Chip Transaction": "In-Store",
+    "Chip Card Transaction": "In-Store",
+    "Swipe": "In-Store",
+    "Online": "Online",
+}
+df["use_chip"] = df["use_chip"].str.strip().replace(use_chip_map).fillna("Unknown")
+
 # column 8 merchant_city
-df["merchant_city"] = df["merchant_city"].replace("ONLINE", "Online") 
+df["merchant_city"] = (
+    df["merchant_city"].str.strip()
+    .str.replace(r"\s+", " ", regex=True)
+    .replace("ONLINE", "Online")
+)
 # column 9 merchant_state
-df["merchant_state"] = df["merchant_state"].fillna("N/A").replace("", "N/A")
+df["merchant_state"] = df["merchant_state"].fillna("N/A").replace("", "N/A").str.strip()
 # column 10 zip
 df["zip"] = df["zip"].fillna("N/A").replace("", "N/A")
-df["zip"] = df["zip"].astype(str).str.replace(".0", "", regex=False)
-# column 11 mcc
+mask = df["zip"] != "N/A"
+df.loc[mask, "zip"] = df.loc[mask, "zip"].astype(str).str.strip().str.replace(r"\.\d+$", "", regex=True)
 # column 12 errors
-df["errors"] = df["errors"].fillna("N/A").replace("", "N/A")
+df["errors"] = df["errors"].fillna("N/A").replace("", "N/A").str.strip()
 
 # ---------------
 # load data
@@ -76,11 +96,11 @@ cursor.execute("DROP TABLE IF EXISTS transformation.transactions_data")
 cursor.execute("""
     CREATE TABLE transformation.transactions_data (
     id              INT,
-    date            VARCHAR(20),
+    date            DATE,
     client_id       INT,
     card_id         INT,
     amount          DECIMAL(18,2),
-    use_chip        VARCHAR(30),
+    use_chip        VARCHAR(20),
     merchant_id     INT,
     merchant_city   VARCHAR(100),
     merchant_state  VARCHAR(50),
@@ -89,17 +109,8 @@ cursor.execute("""
     errors          VARCHAR(255)
     )
 """)
-  
-# Keep only the columns matching the target table
-df = df[["id", "date", "client_id", "card_id", "amount", "use_chip", "merchant_id", "merchant_city", "merchant_state", "zip", "mcc", "errors"]]
 
-# Cast numeric columns (ingestion stores everything as strings)
-for col in ["id", "client_id", "card_id", "merchant_id", "mcc"]:
-    df[col] = pd.to_numeric(df[col], errors="coerce")
-
-# Convert NaN → None in one vectorized pass (replaces slow row-by-row list comprehension)
 records = df.where(df.notna(), other=None).values.tolist()
-
 total = len(records)
 batch_size = 50000
 placeholders = ",".join(["?"] * len(df.columns))
@@ -114,10 +125,10 @@ for i in range(0, total, batch_size):
     rows_inserted += len(batch)
     pct = int(rows_inserted / total * 100)
     if pct != last_pct:
-        print(f"Progress: {pct}% ({rows_inserted}/{total})", flush=True)
+        print(f"Progress: {pct}% ({rows_inserted:,}/{total:,})", flush=True)
         last_pct = pct
 
-print(f"Loaded {total} cleaned rows into transformation.transactions_data")
+print(f"Loaded {total:,} cleaned rows into transformation.transactions_data")
 
 cursor.close()
 conn.close()

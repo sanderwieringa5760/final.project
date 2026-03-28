@@ -113,16 +113,20 @@ df["card_type"] = df["card_type"].replace("CREDIT", "Credit")
 df["card_type"] = df["card_type"].replace("Crdeit", "Credit")
 df["card_type"] = df["card_type"].replace("Card-Credit", "Credit")
 df["card_type"] = df["card_type"].replace("CreditCard", "Credit") 
-df["card_type"] = df["card_type"].replace("CRED", "Credit") 
+df["card_type"] = df["card_type"].replace("Cedit", "Credit") 
+
 # column 6 card_number ---------------------------------------------------------------------
+df["card_number"] = df["card_number"].astype(str).str.strip().str.replace(r"\.\d+$", "", regex=True)
 df = df.drop_duplicates(subset=['card_number'], keep='last')
 # column 7 expires ---------------------------------------------------------------------
 df["expires"] = pd.to_datetime(df["expires"], format="%b-%y", errors="coerce").dt.strftime("%m-%Y")
 df["expires"] = df["expires"].fillna("N/A")
 # column 8 cvv clean
+df["cvv"] = df["cvv"].astype(str).str.strip().str.replace(r"\.0$", "", regex=True)
+df["cvv"] = df["cvv"].apply(lambda v: v.zfill(3) if v.isdigit() and len(v) < 3 else v)
 # column 9 has_chip
 df["has_chip"] = df["has_chip"].replace("YES", "Yes") 
-df["has_chip"] = df["has_chip"].replace("NO", "No") 
+df["has_chip"] = df["has_chip"].replace("NO", "No")     
 # column 10 num_cards_issued clean
 # column 11 credit_limit ---------------------------------------------------------------------
 df["credit_limit"] = df["credit_limit"].fillna(0.0) # missing becomes 0
@@ -218,7 +222,7 @@ cursor.execute("""
     card_type               VARCHAR(50),
     card_number             VARCHAR(50),
     expires                 VARCHAR(10),
-    cvv                     INT,
+    cvv                     VARCHAR(4),
     has_chip                VARCHAR(5),
     num_cards_issued        INT,
     credit_limit            DECIMAL(18,2),
