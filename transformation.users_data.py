@@ -93,15 +93,19 @@ df["total_debt"] = df["total_debt"].apply(parse_currency)
 df["employment_status"] = df["employment_status"].str.lstrip() # remove emtpy spaces at start and end of eduction levels
 df["employment_status"] = df["employment_status"].replace("Studnt", "Student")
 df["employment_status"] = df["employment_status"].replace("student", "Student")
+
 df["employment_status"] = df["employment_status"].replace("Un-employed", "Unemployd")
 df["employment_status"] = df["employment_status"].replace("Unemployd", "Unemployd")
 df["employment_status"] = df["employment_status"].replace("unemployed", "Unemployed")
+
 df["employment_status"] = df["employment_status"].replace("Empl0yed", "Employed")
 df["employment_status"] = df["employment_status"].replace("employed", "Employed")
+
 df["employment_status"] = df["employment_status"].replace("SELF-EMPLOYED", "Self-Employed")
 df["employment_status"] = df["employment_status"].replace("SELF EMPLOYED", "Self-Employed")
 df["employment_status"] = df["employment_status"].replace("Self-Employd", "Self-Employed")
 df["employment_status"] = df["employment_status"].replace("Self Employed", "Self-Employed")
+
 df["employment_status"] = df["employment_status"].replace("Retird", "Retired")
 df["employment_status"] = df["employment_status"].replace("Ret.", "Retired")
 
