@@ -15,6 +15,25 @@ import os
 # don't run the next layer on broken data.
 
 
+# -- Mode selection --
+# t = test mode (only loads 1000 transactions, fast for checking everything works)
+# f = full mode (loads all 1.3M transactions)
+mode = input("Run in test mode or full mode? (t/f): ").strip().lower()
+if mode not in ("t", "f"):
+    print("Invalid input. Enter t or f.")
+    sys.exit(1)
+
+load_script = os.path.join(os.path.dirname(__file__), "Ingestion", "ingestion.load.py")
+with open(load_script, "r") as f:
+    content = f.read()
+if mode == "t":
+    content = content.replace("TEST_MODE = False", "TEST_MODE = True")
+else:
+    content = content.replace("TEST_MODE = True", "TEST_MODE = False")
+with open(load_script, "w") as f:
+    f.write(content)
+
+print(f"\nRunning in {'TEST MODE (1000 transactions)' if mode == 't' else 'FULL MODE (all data)'}.\n")
 
 
 scripts = [
