@@ -15,7 +15,7 @@ import os
 # don't run the next layer on broken data.
 
 
-# -- Mode selection --
+#  Mode selection 
 # t = test mode (only loads 1000 transactions, fast for checking everything works)
 # f = full mode (loads all 1.3M transactions)
 mode = input("Run in test mode or full mode? (t/f): ").strip().lower()
@@ -37,19 +37,19 @@ print(f"\nRunning in {'TEST MODE (1000 transactions)' if mode == 't' else 'FULL 
 
 
 scripts = [
-    # -- Layer 1: Ingestion --
+    #  Layer 1: Ingestion 
     # Creates the database schema and loads raw CSV files as-is into SQL Server
     ("Ingestion",       "ingestion.ddl.py"),           # create database + tables
     ("Ingestion",       "ingestion.load.py"),           # load CSVs into ingestion schema
 
-    # -- Layer 2: Transformation --
+    # Layer 2: Transformation
     # Cleans, standardises, and type-casts each dataset
     ("Transformation",  "transformation.mcc_data.py"),          # clean MCC reference data
     ("Transformation",  "transformation.cards_data.py"),         # clean cards data
     ("Transformation",  "transformation.users_data.py"),         # clean customer data
     ("Transformation",  "transformation.transactions_data.py"),  # clean transactions
 
-    # -- Layer 3: Curated (star schema) --
+    # Layer 3: Curated (star schema)
     # Builds dimension tables first, then the fact table last
     ("Curated",         "curated_dim_mcc.py"),                   # MCC dimension
     ("Curated",         "curated_dim_customer.py"),              # customer dimension
@@ -58,7 +58,7 @@ scripts = [
     ("Curated",         "curated_dim_merchants.py"),             # merchants dimension
     ("Curated",         "curated_dim_fact_transactions.py"),     # fact table (joins all dims)
 
-    # -- Layer 4: Marts --
+    # Layer 4: Marts
     # Pre-aggregated tables built for each business team
     ("Marts",           "mart_customer.py"),    # customer analytics team
     ("Marts",           "mart_finance.py"),     # finance team
