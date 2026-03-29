@@ -3,9 +3,9 @@ import pandas as pd
 import urllib
 from sqlalchemy import create_engine
 
-#--------------------------
+
 # READ SQL
-#--------------------------
+
 conn = pyodbc.connect(
     r"DRIVER={ODBC Driver 17 for SQL Server};"
     r"SERVER=.\SQLEXPRESS;"
@@ -23,9 +23,9 @@ engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}", fast_executema
 
 cur = conn.cursor()
 
-# -----------------------------------
+
 # Get date range from transactions — use SQL to avoid loading all rows
-# -----------------------------------
+
 result = pd.read_sql("""
     SELECT
         CAST(MIN(date) AS DATE) AS min_date,
@@ -39,9 +39,9 @@ max_date = result["max_date"].iloc[0]
 
 print(f"Transaction date range: {min_date} → {max_date}")
 
-# -----------------------------------
+
 # Generate one row per calendar day in the range
-# -----------------------------------
+
 date_range = pd.date_range(start=min_date, end=max_date, freq="D")
 
 dim_date = pd.DataFrame({
@@ -64,9 +64,9 @@ dim_date["full_date"] = pd.to_datetime(dim_date["full_date"])
 
 print(f"dim_date: {len(dim_date)} rows")
 print(dim_date.head())
-#--------------------------
+
 # WRITE TO SQL
-#--------------------------
+
 cur.execute("""
     IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'curated')
     BEGIN EXEC('CREATE SCHEMA curated') END
