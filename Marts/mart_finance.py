@@ -15,11 +15,11 @@ cursor.execute("""
     BEGIN EXEC('CREATE SCHEMA mart') END
 """)
 
-# -----------------------------------------------------------------------
+
 # 1. Revenue by month
 #    Answers: "What is our total revenue by month?"
 #             "What percentage of transactions are refunds?"
-# -----------------------------------------------------------------------
+
 cursor.execute("DROP TABLE IF EXISTS mart.finance_monthly")
 cursor.execute("""
     SELECT
@@ -40,10 +40,10 @@ cursor.execute("""
 """)
 print("mart.finance_monthly created")
 
-# -----------------------------------------------------------------------
+
 # 2. Revenue by state
 #    Answers: "Which states generate the most revenue?"
-# -----------------------------------------------------------------------
+
 cursor.execute("DROP TABLE IF EXISTS mart.finance_by_state")
 cursor.execute("""
     SELECT
@@ -59,10 +59,10 @@ cursor.execute("""
 """)
 print("mart.finance_by_state created")
 
-# -----------------------------------------------------------------------
+
 # 3. Revenue by merchant category (MCC)
 #    Answers: "Which merchant categories drive the highest spending?"
-# -----------------------------------------------------------------------
+
 cursor.execute("DROP TABLE IF EXISTS mart.finance_by_category")
 cursor.execute("""
     SELECT
