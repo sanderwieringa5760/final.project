@@ -3,11 +3,11 @@ import csv
 import itertools
 import pyodbc
 
-# ---- TEST MODE: limit transactions to 1000 rows, load all other tables in full ----
+#  TEST MODE: limit transactions to 1000 rows, load all other tables in full 
 TEST_MODE = False   # Change to False to load all rows for every table
 ROW_LIMIT = 1000
 TRANSACTIONS_TABLE = "ingestion.transactions_data"
-# -----------------------------------------------------------------------------------
+
 
 # Connect to SQL Server database
 conn = pyodbc.connect(
@@ -43,9 +43,9 @@ tables = [
     }
 ]
 
-# ------------------
+# 
 # Load data into tables
-# ------------------
+# 
 
 def count_rows(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
