@@ -3,9 +3,9 @@ import pandas as pd
 import urllib
 from sqlalchemy import create_engine
 
-#--------------------------
+
 # READ SQL
-#--------------------------
+
 conn = pyodbc.connect(
     r"DRIVER={ODBC Driver 17 for SQL Server};"
     r"SERVER=.\SQLEXPRESS;"
@@ -23,15 +23,15 @@ engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}", fast_executema
 
 cur = conn.cursor()
 
-#--------------------------
+
 # Load source from transformation layer
-#--------------------------
+
 df = pd.read_sql("SELECT * FROM transformation.users_data;", con=conn)
 
-#--------------------------
+
 # Build dim_customer
 # Natural key: customer_id
-#--------------------------
+
 dim_customers = pd.DataFrame({
     "customer_id":        df["id"],
     "gender":             df["gender"],
@@ -57,9 +57,9 @@ dim_customers.insert(0, "customer_key", dim_customers.index + 1)
 print(f"dim_customers: {len(dim_customers)} rows")
 print(dim_customers.head())
 
-#--------------------------
+
 # WRITE TO SQL
-#--------------------------
+
 cur.execute("""
     IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'curated')
     BEGIN EXEC('CREATE SCHEMA curated') END
