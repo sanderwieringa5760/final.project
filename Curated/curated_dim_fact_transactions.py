@@ -3,9 +3,9 @@ import pandas as pd
 import urllib
 from sqlalchemy import create_engine
 
-#--------------------------
+
 # READ SQL
-#--------------------------
+
 conn = pyodbc.connect(
     r"DRIVER={ODBC Driver 17 for SQL Server};"
     r"SERVER=.\SQLEXPRESS;"
@@ -51,9 +51,9 @@ dim_mcc = pd.read_sql("""
     FROM curated.dim_mcc
 """, con=conn)
 
-#--------------------------
+
 # DATA CLEANING / BUILD STEPS
-#--------------------------
+
 dim_date["full_date"] = pd.to_datetime(dim_date["full_date"]).dt.date
 
 total_rows = pd.read_sql("""
@@ -63,9 +63,9 @@ total_rows = pd.read_sql("""
 
 print(f"Total transaction rows: {total_rows:,}")
 
-#--------------------------
+
 # WRITE TO SQL
-#--------------------------
+
 cur.execute("""
     IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'curated')
     BEGIN EXEC('CREATE SCHEMA curated') END
@@ -104,9 +104,9 @@ while offset < total_rows:
     if chunk.empty:
         break
 
-    #-----------------------------------
+    
     # Transform current chunk
-    #-----------------------------------
+    
     chunk["full_date"] = pd.to_datetime(chunk["date"], errors="coerce").dt.date
     chunk["mcc"] = pd.to_numeric(chunk["mcc"], errors="coerce")
     chunk["is_refund"] = (chunk["amount"] < 0).astype(int)
