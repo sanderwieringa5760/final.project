@@ -3,9 +3,9 @@ import pandas as pd
 import urllib
 from sqlalchemy import create_engine
 
-#--------------------------
+
 # READ SQL
-#--------------------------
+
 conn = pyodbc.connect(
     r"DRIVER={ODBC Driver 17 for SQL Server};"
     r"SERVER=.\SQLEXPRESS;"
@@ -23,9 +23,9 @@ engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}", fast_executema
 
 cur = conn.cursor()
 
-#--------------------------
+
 # Load source from transformation layer
-#--------------------------
+
 df = pd.read_sql("""
     SELECT DISTINCT
         merchant_id,
@@ -36,9 +36,9 @@ df = pd.read_sql("""
     WHERE merchant_id IS NOT NULL
 """, con=conn)
 
-#--------------------------
+
 # Build dim_merchants
-#--------------------------
+
 dim_merchants = pd.DataFrame({
     "merchant_id":    df["merchant_id"],
     "merchant_city":  df["merchant_city"],
@@ -57,9 +57,9 @@ dim_merchants.insert(0, "merchant_key", dim_merchants.index + 1)
 print(f"dim_merchants: {len(dim_merchants)} rows")
 print(dim_merchants.head())
 
-#--------------------------
+
 # WRITE TO SQL
-#--------------------------
+
 cur.execute("""
     IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'curated')
     BEGIN EXEC('CREATE SCHEMA curated') END
