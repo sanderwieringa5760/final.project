@@ -15,10 +15,10 @@ cursor.execute("""
     BEGIN EXEC('CREATE SCHEMA mart') END
 """)
 
-# -----------------------------------------------------------------------
+
 # 1. Merchant performance (volume + revenue)
 #    Answers: "Which merchants generate the highest transaction volume?"
-# -----------------------------------------------------------------------
+
 cursor.execute("DROP TABLE IF EXISTS mart.merchant_performance")
 cursor.execute("""
     SELECT
@@ -39,10 +39,9 @@ cursor.execute("""
 """)
 print("mart.merchant_performance created")
 
-# -----------------------------------------------------------------------
 # 2. Industry growth by year
 #    Answers: "What industries are growing the fastest?"
-# -----------------------------------------------------------------------
+
 cursor.execute("DROP TABLE IF EXISTS mart.industry_growth")
 cursor.execute("""
     SELECT
@@ -59,10 +58,10 @@ cursor.execute("""
 """)
 print("mart.industry_growth created")
 
-# -----------------------------------------------------------------------
+
 # 3. Merchant error rates
 #    Answers: "Which merchants have the highest error rates?"
-# -----------------------------------------------------------------------
+
 cursor.execute("DROP TABLE IF EXISTS mart.merchant_errors")
 cursor.execute("""
     SELECT
@@ -85,10 +84,10 @@ cursor.execute("""
 """)
 print("mart.merchant_errors created")
 
-# -----------------------------------------------------------------------
+
 # 4. Revenue by geography (state + city)
 #    Answers: "How is revenue distributed geographically?"
-# -----------------------------------------------------------------------
+
 cursor.execute("DROP TABLE IF EXISTS mart.revenue_by_geography")
 cursor.execute("""
     SELECT
