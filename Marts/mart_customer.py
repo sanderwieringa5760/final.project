@@ -15,10 +15,10 @@ cursor.execute("""
     BEGIN EXEC('CREATE SCHEMA mart') END
 """)
 
-# -----------------------------------------------------------------------
+
 # 1. Customer lifetime value
 #    Answers: "What is the lifetime value of each customer?"
-# -----------------------------------------------------------------------
+
 cursor.execute("DROP TABLE IF EXISTS mart.customer_ltv")
 cursor.execute("""
     SELECT
@@ -48,10 +48,10 @@ cursor.execute("""
 """)
 print("mart.customer_ltv created")
 
-# -----------------------------------------------------------------------
+
 # 2. Online vs in-store behaviour per customer
 #    Answers: "How do customers behave online vs in-store?"
-# -----------------------------------------------------------------------
+
 cursor.execute("DROP TABLE IF EXISTS mart.customer_channel")
 cursor.execute("""
     SELECT
@@ -73,10 +73,10 @@ cursor.execute("""
 """)
 print("mart.customer_channel created")
 
-# -----------------------------------------------------------------------
+
 # 3. Active cards per customer
 #    Answers: "How many active cards does a typical customer have?"
-# -----------------------------------------------------------------------
+
 cursor.execute("DROP TABLE IF EXISTS mart.customer_cards")
 cursor.execute("""
     SELECT
@@ -98,12 +98,12 @@ cursor.execute("""
 """)
 print("mart.customer_cards created")
 
-# -----------------------------------------------------------------------
+
 # 4. Suspicious transaction flags
 #    Answers: "Can we identify suspicious transaction patterns?"
 #    Flags: transaction errors, dark-web-linked cards, high-value outliers
 #    (amount > customer average + 3 standard deviations)
-# -----------------------------------------------------------------------
+
 cursor.execute("DROP TABLE IF EXISTS mart.suspicious_transactions")
 cursor.execute("""
     WITH customer_stats AS (
