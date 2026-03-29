@@ -81,6 +81,22 @@ python Marts/mart_merchant.py
 
 Creates the aggregated tables in the `mart` schema for each business team.
 
+**Or run the entire pipeline at once**
+
+python pipeline.py
+
+Runs all 15 scripts in the correct order. At the start it asks:
+- `t` — test mode: loads only 1000 transactions (fast, for verifying everything works)
+- `f` — full mode: loads the entire dataset
+
+If any script fails, the pipeline stops immediately so broken data does not flow into the next layer.
+
+**Step 5 — Mart Governance & Query Guide (optional)**
+
+python mart_governance.py
+
+A CLI tool that helps you navigate the mart tables. Select your team and a business question, and it tells you which mart table to query, which columns to focus on, how to interpret the results, and gives you a ready-to-run SQL query.
+
 
 
 ## The datasets
