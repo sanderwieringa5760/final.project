@@ -9,13 +9,17 @@
 #   - a ready-to-run SQL query
 
 
-# -------------------------------------------------------
-# Knowledge base: team → questions → mart guidance
-# -------------------------------------------------------
+
+# GUIDE: the full knowledge base
+# structure: team name → list of question entries
+# each entry maps a business question to its mart, columns, and SQL
+
 
 GUIDE = {
+    #  Finance Team
     "Finance Team": [
         {
+            # monthly revenue breakdown — most common finance query
             "question": "What is our total revenue by month?",
             "mart":     "mart.finance_monthly",
             "columns":  ["year", "month_name", "total_revenue", "total_refund_amount"],
@@ -31,6 +35,7 @@ GUIDE = {
             ),
         },
         {
+            # refund rate — same table as monthly revenue, different columns
             "question": "What percentage of transactions are refunds?",
             "mart":     "mart.finance_monthly",
             "columns":  ["year", "month_name", "refund_count", "refund_pct"],
@@ -46,6 +51,7 @@ GUIDE = {
             ),
         },
         {
+            # geographic revenue — online transactions excluded (no state)
             "question": "Which states generate the most revenue?",
             "mart":     "mart.finance_by_state",
             "columns":  ["merchant_state", "total_revenue", "total_transactions"],
@@ -62,6 +68,7 @@ GUIDE = {
             ),
         },
         {
+            # spending by MCC category — useful for strategic prioritisation
             "question": "Which merchant categories drive the highest spending?",
             "mart":     "mart.finance_by_category",
             "columns":  ["category", "total_revenue", "avg_transaction_amount", "total_transactions"],
@@ -79,8 +86,10 @@ GUIDE = {
         },
     ],
 
+    # Customer Analytics Team 
     "Customer Analytics Team": [
         {
+            # lifetime value — refunds excluded from spend total
             "question": "What is the lifetime value of each customer?",
             "mart":     "mart.customer_ltv",
             "columns":  ["customer_id", "lifetime_spend", "total_transactions", "avg_transaction_amount", "first_transaction_date", "last_transaction_date"],
@@ -99,6 +108,7 @@ GUIDE = {
             ),
         },
         {
+            # channel split — online vs chip vs swipe per customer
             "question": "How do customers behave online vs in-store?",
             "mart":     "mart.customer_channel",
             "columns":  ["customer_id", "online_pct", "online_transactions", "chip_transactions", "swipe_transactions", "online_spend", "instore_spend"],
@@ -116,6 +126,7 @@ GUIDE = {
             ),
         },
         {
+            # card portfolio per customer — includes dark web flag count
             "question": "How many active cards does a typical customer have?",
             "mart":     "mart.customer_cards",
             "columns":  ["customer_id", "total_cards", "credit_cards", "debit_cards", "prepaid_cards", "avg_credit_limit", "dark_web_cards"],
@@ -133,6 +144,7 @@ GUIDE = {
             ),
         },
         {
+            # fraud signals: dark web cards, error codes, and statistical outliers
             "question": "Can we identify suspicious transaction patterns?",
             "mart":     "mart.suspicious_transactions",
             "columns":  ["transaction_id", "customer_key", "flag_reason", "amount", "customer_avg_amount", "errors", "card_on_dark_web"],
@@ -158,8 +170,10 @@ GUIDE = {
         },
     ],
 
+    #  Merchant Partnerships Team 
     "Merchant Partnerships Team": [
         {
+            # top merchants by volume or revenue — sortable either way
             "question": "Which merchants generate the highest transaction volume?",
             "mart":     "mart.merchant_performance",
             "columns":  ["merchant_id", "merchant_city", "merchant_state", "category", "total_transactions", "total_revenue", "avg_transaction_amount"],
@@ -177,6 +191,7 @@ GUIDE = {
             ),
         },
         {
+            # year-over-year revenue per MCC category — one row per category per year
             "question": "What industries are growing the fastest?",
             "mart":     "mart.industry_growth",
             "columns":  ["year", "category", "total_transactions", "total_revenue"],
@@ -193,6 +208,7 @@ GUIDE = {
             ),
         },
         {
+            # error rate per merchant — filter by volume to avoid noise from tiny merchants
             "question": "Which merchants have the highest error rates?",
             "mart":     "mart.merchant_errors",
             "columns":  ["merchant_id", "merchant_city", "merchant_state", "total_transactions", "error_count", "error_rate_pct", "error_types"],
@@ -207,11 +223,12 @@ GUIDE = {
                 "SELECT TOP 10 merchant_id, merchant_city, merchant_state,\n"
                 "       total_transactions, error_count, error_rate_pct, error_types\n"
                 "FROM mart.merchant_errors\n"
-                "WHERE total_transactions > 10\n"
+                "WHERE total_transactions > 10\n"  # ignore merchants with too few transactions
                 "ORDER BY error_rate_pct DESC;"
             ),
         },
         {
+            # revenue by city + state — online transactions (state = N/A) already excluded
             "question": "How is revenue distributed geographically?",
             "mart":     "mart.revenue_by_geography",
             "columns":  ["merchant_state", "merchant_city", "total_transactions", "total_revenue", "avg_transaction_amount"],
@@ -237,37 +254,45 @@ GUIDE = {
     ],
 }
 
+# list of teams — keeps menu order consistent with GUIDE definition order
 TEAMS = list(GUIDE.keys())
 
 
-# -------------------------------------------------------
+
 # Helper functions
-# -------------------------------------------------------
+
 
 def print_separator():
+    # visual divider between sections in the output
     print("-" * 55)
 
+
 def prompt_choice(prompt, max_value):
-    """Ask the user for a number between 1 and max_value. Re-prompts on invalid input."""
+    # keeps asking until the user enters a valid number
     while True:
         raw = input(prompt).strip()
         if raw.isdigit() and 1 <= int(raw) <= max_value:
             return int(raw)
         print(f"  Please enter a number between 1 and {max_value}.")
 
+
 def show_teams():
+    # print numbered team list for the user to pick from
     print("\nSelect your team:")
     for i, team in enumerate(TEAMS, 1):
         print(f"  {i}. {team}")
 
+
 def show_questions(team_name):
+    # print numbered questions for the selected team
     questions = GUIDE[team_name]
     print(f"\n{team_name} — business questions:")
     for i, entry in enumerate(questions, 1):
         print(f"  {i}. {entry['question']}")
 
+
 def show_guidance(entry):
-    """Print the full guidance for a selected question."""
+    # print the full guidance block: mart, columns, interpretation, and SQL
     print_separator()
     print(f"  Question : {entry['question']}")
     print(f"  Mart     : {entry['mart']}")
@@ -279,32 +304,34 @@ def show_guidance(entry):
     print_separator()
     print("  SQL query:")
     print()
+    # indent each SQL line for readability
     for line in entry["sql"].splitlines():
         print(f"    {line}")
     print_separator()
 
 
-# -------------------------------------------------------
+
 # Main
-# -------------------------------------------------------
+
 
 def main():
     print("=" * 55)
     print("  ClearSpend — Mart Governance & Query Guide")
     print("=" * 55)
 
-    # Step 1: choose a team
+    # step 1: pick a team
     show_teams()
     team_choice = prompt_choice("\nEnter team number: ", len(TEAMS))
     team_name = TEAMS[team_choice - 1]
 
-    # Step 2: show questions for that team
+    # step 2: pick a business question
     show_questions(team_name)
     question_choice = prompt_choice("\nEnter question number: ", len(GUIDE[team_name]))
     entry = GUIDE[team_name][question_choice - 1]
 
-    # Step 3: show guidance + SQL
+    # step 3: show the guidance and SQL
     show_guidance(entry)
+
 
 if __name__ == "__main__":
     main()
