@@ -38,14 +38,16 @@ if removed > 0:
     print(f"Removed {removed} duplicate row(s). {len(df)} rows remaining.")
 else:
     print("No duplicate rows found.")
+    
 # column 1 code    
 df["code"] = df["code"].str.replace('"', '') # make normal numbers, remove "
 df["code"] = df["code"].str.replace('MCC', '') # remove MCC
 df = df.iloc[:-2] # remove final rows of comments
 # column 2 description
-df["description"] = df["description"].str.lstrip()
+df["description"] = df["description"].str.strip().str.capitalize()
+df = df.drop_duplicates(subset=["code"], keep="last")
 # column 3 notes
-df["notes"] = df["notes"].fillna("N/A")
+df["notes"] = df["notes"].fillna("N/A").replace("", "N/A").str.strip().replace("", "N/A").str.capitalize()
 # column 4 updated_by
 df["updated_by"] = df["updated_by"].fillna("N/A")
 

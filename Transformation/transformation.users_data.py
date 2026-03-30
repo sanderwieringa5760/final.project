@@ -39,15 +39,6 @@ if removed > 0:
 else:
     print("No duplicate rows found.")
 
-# remove rows with duplicate customer id (keep first occurrence)
-before = len(df)
-df = df.drop_duplicates(subset=["id"], keep="first")
-removed = before - len(df)
-if removed > 0:
-    print(f"Removed {removed} duplicate customer id(s). {len(df)} rows remaining.")
-else:
-    print("No duplicate customer ids found.")
-
 # column 1  id
 # column 2  current_age
 today = pd.Timestamp.today()
@@ -99,18 +90,22 @@ df["total_debt"] = df["total_debt"].apply(parse_currency)
 # column 13 credit_score
 # column 14 num_credit_cards
 # column 15 employment_status
-df["employment_status"] = df["employment_status"].str.strip() # remove empty spaces at start and end
+df["employment_status"] = df["employment_status"].str.lstrip() # remove emtpy spaces at start and end of eduction levels
 df["employment_status"] = df["employment_status"].replace("Studnt", "Student")
 df["employment_status"] = df["employment_status"].replace("student", "Student")
-df["employment_status"] = df["employment_status"].replace("Un-employed", "Unemployed")
-df["employment_status"] = df["employment_status"].replace("Unemployd", "Unemployed")
+
+df["employment_status"] = df["employment_status"].replace("Un-employed", "Unemployd")
+df["employment_status"] = df["employment_status"].replace("Unemployd", "Unemployd")
 df["employment_status"] = df["employment_status"].replace("unemployed", "Unemployed")
+
 df["employment_status"] = df["employment_status"].replace("Empl0yed", "Employed")
 df["employment_status"] = df["employment_status"].replace("employed", "Employed")
+
 df["employment_status"] = df["employment_status"].replace("SELF-EMPLOYED", "Self-Employed")
 df["employment_status"] = df["employment_status"].replace("SELF EMPLOYED", "Self-Employed")
 df["employment_status"] = df["employment_status"].replace("Self-Employd", "Self-Employed")
 df["employment_status"] = df["employment_status"].replace("Self Employed", "Self-Employed")
+
 df["employment_status"] = df["employment_status"].replace("Retird", "Retired")
 df["employment_status"] = df["employment_status"].replace("Ret.", "Retired")
 
